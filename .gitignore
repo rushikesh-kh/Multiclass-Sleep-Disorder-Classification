@@ -1,0 +1,57 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- Virtual Environments ----
+venv/
+env/
+ENV/
+.venv/
+.env
+
+# ---- Jupyter Notebook ----
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ---- Flask ----
+instance/
+.webassets-cache
+
+# ---- Environment / Secrets ----
+.env
+.env.*
+*.env
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- OS Files ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- IDE / Editor ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- Testing / Coverage ----
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Distribution / Packaging ----
+*.egg
+MANIFEST
+
+# ---- Jupyter checkpoint & temp exports ----
+*-checkpoint.ipynb
