@@ -1,5 +1,5 @@
 """
-app.py — SomniSense Flask server
+app.py — SleepSenseAI Flask server
 ============================================================
 Serves predictions from the pipeline trained by model.py
 (sleep_model.pkl). This file never trains anything — it is
