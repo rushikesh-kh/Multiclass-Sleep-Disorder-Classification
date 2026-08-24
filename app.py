@@ -1,18 +1,10 @@
 """
-app.py — SleepSenseAI Flask server
+app.py — SleepSense AI Flask server
 ============================================================
 Serves predictions from the pipeline trained by model.py
 (sleep_model.pkl). This file never trains anything — it is
 model-agnostic and will keep working if the underlying
 estimator in model.py changes.
-
-Beyond the raw class probabilities, this endpoint also returns:
-  - a composite Sleep Risk Score (0-100)
-  - a per-vital wellness score against clinically reasonable
-    reference bands (for the UI's vitals radar)
-  - a comparison of the user's vitals against the average
-    profile of the predicted class (from the training data)
-  - a short list of plain-language contributing factors
 
 None of this is a medical diagnosis — see the disclaimer
 returned with every response and shown in the UI.
