@@ -11,8 +11,8 @@
 [![imbalanced--learn](https://img.shields.io/badge/imbalanced--learn-SMOTE-red.svg)](https://imbalanced-learn.org/)
 [![Flask](https://img.shields.io/badge/Flask-Deployment-lightgrey.svg)](https://flask.palletsprojects.com/)
 
-> A supervised, explainable machine learning system that classifies an individual's sleep health status —identifying whether a sleep disorder (**Insomnia** or **Sleep Apnea**) is present, or confirming a healthy sleep profile — using demographic, lifestyle, physiological data & cardiovascular health indicators. Built as a leakage-free, benchmarked, and interpretable end-to-end pipeline, deployed as a Flask web application.
-is present, or confirming a healthy sleep profile —
+> A supervised, explainable machine learning system that classifies an individual's sleep health status — identifying whether a sleep disorder (**Insomnia** or **Sleep Apnea**) is present, or confirming a healthy sleep profile — using demographic, lifestyle, physiological data & cardiovascular health indicators. Built as a leakage-free, benchmarked, and interpretable end-to-end pipeline, deployed as a Flask web application.
+
 ---
 
 ## 📌 Table of Contents
@@ -84,8 +84,8 @@ Given an individual's demographic, lifestyle, and physiological attributes, pred
 
 ## 📊 Dataset
 
-**Source:** Sleep Health and Lifestyle Dataset (Kaggle, synthetically generated)
-**File:** `data/Sleep_Health_Lifestyle_Dataset.xlsx`
+**Source:** Sleep Health and Lifestyle Dataset (Kaggle, synthetically generated)  
+**File:** `data/Sleep_Health_Lifestyle_Dataset.xlsx`  
 **Raw Shape:** 10,050 records → **10,000 records × 13 features** after de-duplication
 
 | Feature | Description |
@@ -295,20 +295,21 @@ After comparing multiple classifiers, class-weighting and SMOTE strategies, and 
 
 ## 📁 Project Structure
 
-```
-sleep-health-risk-model/
+```text
+Multiclass-Sleep-Disorder-Classification/
 │
 ├── app.py
 ├── model.py
 ├── sleep_model.pkl
 ├── requirements.txt
+├── render.yaml
 ├── .gitignore
 ├── README.md
 │
 ├── data/
-│   ├── Sleep_Health_Lifestyle_Dataset.xlsx                                                                  
+│   ├── Sleep_Health_Lifestyle_Dataset.xlsx
 │   ├── Multiclass Sleep Disorder Classification Report.pdf
-│   ├── Multiclass Seep Disorder Classification Report.docx   
+│   └── Multiclass Seep Disorder Classification Report.docx
 │
 ├── notebook/
 │   └── MultiClass_Sleep_Disorder_Prediction.ipynb
@@ -346,29 +347,103 @@ sleep-health-risk-model/
 │       └── sleep-health-data-model.png
 │
 └── demo/
-    └── dashboard-demo.mp4
+    ├── dashboard-demo.mp4
     └── sleep-health-predictor-app.mp4
+```
+
 ---
 
 ## ▶️ How to Run
 
+### 💻 Run Locally
+
 ```bash
 # 1. Clone the repository
-git clone https://github.com/rushikesh-kh/sleep-health-risk-model.git
-cd sleep-health-risk-model
+git clone https://github.com/rushikesh-kh/Multiclass-Sleep-Disorder-Classification.git
+cd Multiclass-Sleep-Disorder-Classification
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3a. Explore the notebook
+# 3. Explore the notebook
 jupyter notebook notebook/MultiClass_Sleep_Disorder_Prediction.ipynb
 
-# 3b. Or run the deployed app
+# 4. Run the Flask application locally
 python app.py
 ```
 
-**`requirements.txt`**
+The application will be available locally at:
+
+```text
+http://127.0.0.1:5000
 ```
+
+### 🌐 Render Deployment — Live Demo
+
+The application is deployed as a Flask web service on **Render** using **Gunicorn**.
+
+**Live Demo:**  
+https://YOUR-RENDER-URL.onrender.com
+
+The deployed application provides the same sleep-disorder prediction functionality through a web interface without requiring local installation.
+
+### ❤️ Health Check
+
+The deployed application includes a health-check endpoint:
+
+```text
+https://YOUR-RENDER-URL.onrender.com/health
+```
+
+A successful response is:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+This confirms that the Flask application is running successfully on Render.
+
+### ⚙️ Render Configuration
+
+The deployment is configured using `render.yaml`:
+
+```yaml
+services:
+  - type: web
+    name: sleep-disorder-prediction
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /health
+```
+
+### 📦 Deployment Requirements
+
+The application uses the dependencies specified in `requirements.txt` and is served in production using Gunicorn.
+
+The deployment workflow is:
+
+```text
+GitHub Repository
+       ↓
+Render
+       ↓
+Install requirements.txt
+       ↓
+Gunicorn
+       ↓
+Flask Application
+       ↓
+Live Web Application
+```
+
+> **Note:** The Render Free instance may spin down after periods of inactivity. The first request after inactivity may therefore take a little longer while the service starts again.
+
+**`requirements.txt`**
+
+```text
 pandas
 numpy
 matplotlib
@@ -400,7 +475,7 @@ This project uses a **synthetic dataset** and is built for educational and portf
 
 ## 👤 Author
 
-**Rushikesh Khamgaonkar**
+**Rushikesh Khamgaonkar**  
 📧 [rushikeshkhamgaonkar9869@gmail.com](mailto:rushikeshkhamgaonkar9869@gmail.com) · [LinkedIn](https://www.linkedin.com/in/rushikesh-khamgaonkar-588b77227/) · [GitHub](https://github.com/rushikesh-kh)
 
 <p align="center"><i>⭐ If you found this project insightful, consider starring the repository!</i></p>
