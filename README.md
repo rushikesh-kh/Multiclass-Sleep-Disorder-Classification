@@ -312,14 +312,10 @@ Multiclass-Sleep-Disorder-Classification/
 │   └── Multiclass Seep Disorder Classification Report.docx
 │
 ├── notebook/
-│   └── MultiClass_Sleep_Disorder_Prediction.ipynb
+│   └── Multiclass Sleep Disorder Classification.ipynb
 │
 ├── templates/
 │   └── index.html
-│
-├── static/
-│   ├── css/
-│   └── js/
 │
 ├── figures/
 │   ├── Box_Plot_Analysis_Numerical_Features.png
@@ -346,14 +342,12 @@ Multiclass-Sleep-Disorder-Classification/
 │       ├── sleep-health-analytics-dashboard.png
 │       └── sleep-health-data-model.png
 │
-└── demo/
-    ├── dashboard-demo.mp4
-    └── sleep-health-predictor-app.mp4
+
 ```
 
 ---
 
-## ▶️ How to Run
+## ▶️ How to Run & Render Deployment
 
 ### 💻 Run Locally
 
@@ -366,7 +360,7 @@ cd Multiclass-Sleep-Disorder-Classification
 pip install -r requirements.txt
 
 # 3. Explore the notebook
-jupyter notebook notebook/MultiClass_Sleep_Disorder_Prediction.ipynb
+jupyter notebook notebook/Multiclass%20Sleep%20Disorder%20Classification.ipynb
 
 # 4. Run the Flask application locally
 python app.py
@@ -383,31 +377,13 @@ http://127.0.0.1:5000
 The application is deployed as a Flask web service on **Render** using **Gunicorn**.
 
 **Live Demo:**  
-https://YOUR-RENDER-URL.onrender.com
+https://multiclass-sleep-disorder-classification.onrender.com
 
 The deployed application provides the same sleep-disorder prediction functionality through a web interface without requiring local installation.
 
-### ❤️ Health Check
+### ⚙️ Render Deployment Configuration
 
-The deployed application includes a health-check endpoint:
-
-```text
-https://YOUR-RENDER-URL.onrender.com/health
-```
-
-A successful response is:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-This confirms that the Flask application is running successfully on Render.
-
-### ⚙️ Render Configuration
-
-The deployment is configured using `render.yaml`:
+The deployment is configured using the `render.yaml` file included in the repository:
 
 ```yaml
 services:
@@ -419,29 +395,57 @@ services:
     healthCheckPath: /health
 ```
 
-### 📦 Deployment Requirements
+Render automatically:
 
-The application uses the dependencies specified in `requirements.txt` and is served in production using Gunicorn.
+1. Connects to the GitHub repository.
+2. Installs the dependencies from `requirements.txt`.
+3. Starts the Flask application using Gunicorn.
+4. Runs the `/health` endpoint to verify that the service is running.
+5. Provides a public URL for accessing the deployed application.
 
-The deployment workflow is:
+### ❤️ Health Check
+
+The application provides a health-check endpoint:
+
+```text
+https://multiclass-sleep-disorder-classification.onrender.com/health
+```
+
+A successful response is:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+This confirms that the Flask application is running successfully.
+
+### 📦 Production Deployment
+
+The deployment architecture is:
 
 ```text
 GitHub Repository
        ↓
-Render
+     Render
        ↓
 Install requirements.txt
        ↓
-Gunicorn
+    Gunicorn
        ↓
-Flask Application
+ Flask Application
        ↓
-Live Web Application
+  Live Web App
 ```
 
-> **Note:** The Render Free instance may spin down after periods of inactivity. The first request after inactivity may therefore take a little longer while the service starts again.
+### ⚠️ Render Free Instance
 
-**`requirements.txt`**
+The application is deployed using Render's Free instance. Free instances may spin down after periods of inactivity, so the first request after a period of inactivity may take a little longer while the service starts.
+
+### 📋 Requirements
+
+The project dependencies are defined in `requirements.txt`:
 
 ```text
 pandas
@@ -455,7 +459,6 @@ shap
 flask
 openpyxl
 ```
-
 ---
 
 ## 🚀 Future Enhancements
