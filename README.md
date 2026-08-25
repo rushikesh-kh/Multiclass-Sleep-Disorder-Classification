@@ -1,4 +1,4 @@
-# 🩺 Explainable Multiclass Sleep Disorder Classification
+# 🩺 Multiclass Sleep Health Risk Classification & Explainable AI System
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![scikit--learn](https://img.shields.io/badge/scikit--learn-ML-orange.svg)](https://scikit-learn.org/)
