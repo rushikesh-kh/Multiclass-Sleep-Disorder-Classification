@@ -6,6 +6,7 @@
 [![Decision Tree](https://img.shields.io/badge/Decision%20Tree-Classifier-success.svg)](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html)
 [![Random Forest](https://img.shields.io/badge/Random%20Forest-Classifier-green.svg)](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Final%20Model-brightgreen.svg)](https://xgboost.readthedocs.io/)
+[![Calibrated XGBoost](https://img.shields.io/badge/Calibrated%20XGBoost-Sigmoid%20Calibration-yellowgreen.svg)](https://scikit-learn.org/stable/modules/calibration.html)
 [![Support Vector Machine](https://img.shields.io/badge/Support%20Vector%20Machine-SVM-red.svg)](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)
 [![SHAP](https://img.shields.io/badge/SHAP-Explainability-9cf.svg)](https://shap.readthedocs.io/)
 [![imbalanced--learn](https://img.shields.io/badge/imbalanced--learn-SMOTE-red.svg)](https://imbalanced-learn.org/)
@@ -238,6 +239,32 @@ The PR-AUC results demonstrate strong precision-recall performance across all th
 **Final Model:** Tuned **XGBoost with Class Weight**
 
 ---
+
+## Probability Calibration Analysis
+
+Probability calibration was evaluated because the final XGBoost model produces multiclass probability estimates using `predict_proba()` for the three sleep-disorder classes: **No Sleep Disorder, Insomnia, and Sleep Apnea**.
+
+The calibration analysis included:
+
+- One-vs-rest calibration curves for all three classes
+- Multiclass Log Loss
+- Multiclass Brier Score
+- Comparison of the original XGBoost model with a sigmoid-calibrated XGBoost model
+
+### Results
+
+| Model | Multiclass Log Loss | Multiclass Brier Score |
+|---|---:|---:|
+| Original XGBoost | **0.1700** | **0.0965** |
+| Sigmoid-Calibrated XGBoost | 0.1941 | 0.0988 |
+
+Lower values indicate better probability performance. The original XGBoost model achieved lower values for both metrics than the sigmoid-calibrated model. Therefore, the tested sigmoid calibration approach did not improve the evaluated probability performance on the held-out test set.
+
+
+### Decision
+
+Based on the empirical comparison, the **original XGBoost model was retained for deployment**. The calibrated model was not incorporated into the production pipeline because it did not improve the evaluated probability metrics.
+
 
 ## 🔍 Model Explainability (SHAP)
 
