@@ -12,7 +12,7 @@
 [![imbalanced--learn](https://img.shields.io/badge/imbalanced--learn-SMOTE-red.svg)](https://imbalanced-learn.org/)
 [![Flask](https://img.shields.io/badge/Flask-Deployment-lightgrey.svg)](https://flask.palletsprojects.com/)
 
-> A supervised, explainable machine learning system that classifies an individual's sleep health status — identifying whether a sleep disorder (**Insomnia** or **Sleep Apnea**) is present, or confirming a healthy sleep profile — using demographic, lifestyle, physiological data & cardiovascular health indicators. Built as a leakage-free, benchmarked, and interpretable end-to-end pipeline, deployed as a Flask web application.
+> A supervised, explainable machine learning system that classifies an individual's sleep health status — identifying whether a sleep disorder (**Insomnia** or **Sleep Apnea**) is present, or indicating a sleep profile with no identified disorder— using demographic, lifestyle, physiological data & cardiovascular health indicators. Built as a leakage-free, benchmarked, and interpretable end-to-end pipeline, deployed as a Flask web application.
 
 ---
 
