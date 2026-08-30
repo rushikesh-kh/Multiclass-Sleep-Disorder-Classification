@@ -12,7 +12,7 @@
 [![imbalanced--learn](https://img.shields.io/badge/imbalanced--learn-SMOTE-red.svg)](https://imbalanced-learn.org/)
 [![Flask](https://img.shields.io/badge/Flask-Deployment-lightgrey.svg)](https://flask.palletsprojects.com/)
 
-> A supervised, explainable machine learning system that classifies an individual's sleep health status — identifying whether a sleep disorder (**Insomnia** or **Sleep Apnea**) is present, or indicating a sleep profile with no identified disorder— using demographic, lifestyle, physiological data & cardiovascular health indicators. Built as a leakage-free, benchmarked, and interpretable end-to-end pipeline, deployed as a Flask web application.
+> A supervised, explainable machine learning system that classifies an individual's sleep health status — identifying whether a sleep disorder (**Insomnia** or **Sleep Apnea**) is present, or indicating a sleep profile with no identified disorder — using demographic, lifestyle, physiological data & cardiovascular health indicators. Built as a leakage-free, benchmarked, and interpretable end-to-end pipeline, deployed as a Flask web application.
 
 ---
 
@@ -242,28 +242,27 @@ The PR-AUC results demonstrate strong precision-recall performance across all th
 
 ## Probability Calibration Analysis
 
-Probability calibration was evaluated because the final XGBoost model produces multiclass probability estimates using `predict_proba()` for the three sleep-disorder classes: **No Sleep Disorder, Insomnia, and Sleep Apnea**.
+Probability calibration was evaluated to determine whether the final XGBoost model's multiclass probability estimates could be improved for **No Sleep Disorder, Insomnia, and Sleep Apnea**.
 
 The calibration analysis included:
 
 - One-vs-rest calibration curves for all three classes
-- Multiclass Log Loss
-- Multiclass Brier Score
-- Comparison of the original XGBoost model with a sigmoid-calibrated XGBoost model
+- Multiclass Log Loss and Brier Score
+- Comparison of the original XGBoost model with **Platt Scaling (sigmoid)** and **Isotonic Regression**
 
 ### Results
 
 | Model | Multiclass Log Loss | Multiclass Brier Score |
 |---|---:|---:|
 | Original XGBoost | **0.1700** | **0.0965** |
-| Sigmoid-Calibrated XGBoost | 0.1941 | 0.0988 |
+| Platt Scaling (Sigmoid) | 0.1941 | 0.0988 |
+| Isotonic Regression | 0.1718 | 0.0977 |
 
-Lower values indicate better probability performance. The original XGBoost model achieved lower values for both metrics than the sigmoid-calibrated model. Therefore, the tested sigmoid calibration approach did not improve the evaluated probability performance on the held-out test set.
-
+Lower values indicate better probability performance. The original XGBoost model achieved the lowest values for both metrics, while Isotonic Regression performed closer to the original model than Platt Scaling.
 
 ### Decision
 
-Based on the empirical comparison, the **original XGBoost model was retained for deployment**. The calibrated model was not incorporated into the production pipeline because it did not improve the evaluated probability metrics.
+Neither calibration method improved the original probability estimates. Therefore, the **original XGBoost model was retained for deployment**, and the calibration methods were documented as post-training validation experiments without changing the production pipeline.
 
 
 ## 🔍 Model Explainability (SHAP)
