@@ -433,7 +433,7 @@ Render automatically:
 The application provides a health-check endpoint:
 
 ```text
-https://multiclass-sleep-disorder-classification.onrender.com/health
+https://multiclass-sleep-disorder-classification-y2ol.onrender.com/health
 ```
 
 A successful response is:
