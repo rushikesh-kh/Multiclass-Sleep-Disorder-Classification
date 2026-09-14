@@ -24,7 +24,7 @@ import pickle
 import pandas as pd
 from flask import Flask, jsonify, render_template, request
 
-from model import engineer_features
+from model import VALIDATION_SCHEMA as MODEL_VALIDATION_SCHEMA, engineer_features
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_FILE = os.path.join(BASE_DIR, "sleep_model.pkl")
@@ -38,6 +38,7 @@ PIPELINE = ARTIFACT["pipeline"]
 TARGET_MAPPING_INV = ARTIFACT["target_mapping_inv"]
 FEATURE_ORDER = ARTIFACT["feature_order"]
 CLASS_PROFILES = ARTIFACT["class_profiles"]
+VALIDATION_SCHEMA = MODEL_VALIDATION_SCHEMA
 
 REQUIRED_FIELDS = [
     "gender", "age", "occupation", "sleepDuration", "sleepQuality",
@@ -46,15 +47,9 @@ REQUIRED_FIELDS = [
 ]
 
 NUMERIC_RULES = {
-    "age": (18.0, 80.0),
-    "sleepDuration": (4.0, 10.0),
-    "sleepQuality": (1.0, 10.0),
-    "stressLevel": (1.0, 10.0),
-    "physicalActivity": (0.0, 120.0),
-    "dailySteps": (1000.0, 20000.0),
-    "systolicBP": (90.0, 200.0),
-    "diastolicBP": (55.0, 130.0),
-    "heartRate": (40.0, 140.0),
+    field: (float(rule["min"]), float(rule["max"]))
+    for field, rule in VALIDATION_SCHEMA.items()
+    if rule.get("type") == "number"
 }
 
 FIELD_TO_COLUMN = {
@@ -87,9 +82,9 @@ def _trained_categories(column):
 
 
 VALID_CATEGORIES = {
-    "gender": _trained_categories("Gender"),
-    "occupation": _trained_categories("Occupation"),
-    "bmiCategory": _trained_categories("BMI Category"),
+    field: (_trained_categories(FIELD_TO_COLUMN[field]) or set(rule.get("options", [])))
+    for field, rule in VALIDATION_SCHEMA.items()
+    if rule.get("type") == "select"
 }
 
 # Clinically-reasonable reference bands used only for the UI's wellness
@@ -100,9 +95,9 @@ VITAL_REFERENCE = {
     "stressLevel":      ("Stress Level", "/10",  1.0,  4.0,  1.0, 10.0, False),
     "physicalActivity": ("Physical Activity", "min", 30.0, 90.0, 0.0, 150.0, True),
     "dailySteps":       ("Daily Steps", "steps", 7000.0, 12000.0, 500.0, 20000.0, True),
-    "heartRate":        ("Resting Heart Rate", "bpm", 60.0, 80.0, 40.0, 140.0, False),
-    "systolicBP":       ("Systolic BP", "mmHg", 90.0, 120.0, 80.0, 200.0, False),
-    "diastolicBP":      ("Diastolic BP", "mmHg", 60.0, 80.0, 50.0, 130.0, False),
+    "heartRate":        ("Resting Heart Rate", "bpm", 60.0, 80.0, 50.0, 120.0, False),
+    "systolicBP":       ("Systolic BP", "mmHg", 90.0, 120.0, 90.0, 180.0, False),
+    "diastolicBP":      ("Diastolic BP", "mmHg", 60.0, 80.0, 60.0, 120.0, False),
 }
 
 FEATURE_KEY_TO_COLUMN = {
@@ -111,6 +106,11 @@ FEATURE_KEY_TO_COLUMN = {
     "heartRate": "Heart Rate", "dailySteps": "Daily Steps",
     "systolicBP": "Systolic BP", "diastolicBP": "Diastolic BP",
 }
+
+
+@app.get("/validation-rules")
+def validation_rules():
+    return jsonify(VALIDATION_SCHEMA)
 
 
 def _parse_number(field, value):

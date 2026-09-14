@@ -397,14 +397,26 @@
   .field label{ display:block; font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:8px; }
   .field .hint{ font-size:11.5px; color:var(--text-faint); margin-top:6px; }
 
-  input[type="number"], select{
-    width:100%; font-family:var(--font-mono); font-size:14.5px; color:var(--text-primary); background:var(--bg-raised);
-    border:1px solid var(--border-glass-strong); border-radius:var(--radius-sm); padding:12px 13px; min-height:46px;
-    transition:border-color .2s, background .2s;
+  input[type="text"][inputmode="numeric"], select{
+    width:100%; font-family:var(--font-mono); font-size:15px; font-weight:500; letter-spacing:.01em;
+    color:var(--text-primary); background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));
+    border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; min-height:50px;
+    box-sizing:border-box; outline:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 6px 18px rgba(3,7,20,.12);
+    transition:border-color .2s ease,background .2s ease,box-shadow .2s ease,transform .2s ease;
   }
-  select{ font-family:var(--font-body); }
-  input[type="number"]:hover, select:hover{ border-color:var(--accent-violet); }
-  input[type="number"]:focus, select:focus{ border-color:var(--accent-violet); background:color-mix(in srgb, var(--accent-violet) 6%, var(--bg-raised)); }
+  select{font-family:var(--font-body);}
+  input[type="text"][inputmode="numeric"]:hover, select:hover{
+    border-color:rgba(139,124,246,.38);
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));
+  }
+  input[type="text"][inputmode="numeric"]:focus, select:focus{
+    border-color:rgba(139,124,246,.72);
+    background:linear-gradient(180deg,rgba(139,124,246,.09),rgba(255,255,255,.025));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 3px rgba(139,124,246,.09),0 10px 26px rgba(3,7,20,.18);
+    transform:translateY(-1px);
+  }
+  input[type="text"][inputmode="numeric"]::selection{background:rgba(139,124,246,.3);}
   select option{ background:var(--bg-panel-solid); color:var(--text-primary); }
 
   .slider-row{ display:flex; align-items:center; gap:14px; }
@@ -463,6 +475,17 @@
       0 0 22px rgba(139,124,246,.08);
   }
   .full-name-field .field-hint{margin-top:7px;font-size:11px;color:var(--text-faint);}
+
+  .field-range{margin-top:8px;font-size:11.5px;line-height:1.45;color:var(--text-faint);letter-spacing:.01em;}
+  .field-range strong{font-weight:600;color:var(--text-muted);}
+  .field-error{display:none;margin-top:7px;font-size:11.5px;line-height:1.4;color:var(--accent-rose);}
+  .field.invalid input[type="number"],.field.invalid select{border-color:var(--accent-rose);box-shadow:0 0 0 3px rgba(255,92,122,.08);}
+  .field.invalid .field-error{display:block;}
+  .field.valid input[type="number"],.field.valid select{border-color:rgba(69,224,216,.48);}
+  .validation-summary{display:none;align-items:flex-start;gap:10px;margin:0 0 20px;padding:13px 15px;border:1px solid rgba(255,92,122,.24);border-radius:12px;background:rgba(255,92,122,.055);color:var(--text-muted);font-size:12px;line-height:1.45;}
+  .validation-summary.show{display:flex;}
+  .validation-summary strong{display:block;color:var(--text-primary);font-size:12.5px;margin-bottom:2px;}
+  .validation-icon{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:50%;background:rgba(255,92,122,.12);color:var(--accent-rose);font-weight:800;}
 
   .result-top{ display:flex; gap:22px; align-items:center; flex-wrap:wrap; margin-bottom:32px; }
   .result-badge{
@@ -803,6 +826,7 @@
       <div class="card">
         <div class="card-inner">
           <form id="predict-form">
+            <div class="validation-summary" id="validationSummary" role="alert" aria-live="polite"><div class="validation-icon">!</div><div><strong>Review your entries</strong><span id="validationSummaryText">Please correct the highlighted fields before continuing.</span></div></div>
             <!-- STEP 1: PROFILE -->
             <div class="tab-panel active" data-panel="profile">
               <div class="field-grid">
@@ -817,7 +841,7 @@
                 </div>
                 <div class="field">
                   <label for="age">Age</label>
-                  <input type="number" id="age" value="35" min="18" max="80">
+                  <input type="text" id="age" value="35" inputmode="numeric" autocomplete="off" maxlength="2" aria-describedby="age-limit age-error"><div class="field-range" id="age-limit">Enter an age between <strong>18 and 80 years</strong>.</div><div class="field-error" id="age-error"></div>
                 </div>
                 <div class="field full-span">
                   <label for="occupation">Occupation</label>
@@ -835,19 +859,19 @@
               <div class="field-grid">
                 <div class="field full-span">
                   <label for="sleepDuration">Sleep Duration <span class="hint">(hours / night)</span></label>
-                  <div class="slider-row"><input type="range" id="sleepDuration" min="4" max="10" step="0.1" value="7"><span class="slider-value" id="sleepDuration-val">7.0</span></div>
+                  <div class="slider-row"><input type="range" id="sleepDuration" min="4" max="10" step="0.1" value="7" aria-describedby="sleepDuration-limit sleepDuration-error"><span class="slider-value" id="sleepDuration-val">7.0</span></div><div class="field-range" id="sleepDuration-limit">Choose between <strong>4.0 and 10.0 hours per night</strong>.</div><div class="field-error" id="sleepDuration-error"></div>
                 </div>
                 <div class="field full-span">
                   <label for="sleepQuality">Quality of Sleep <span class="hint">(self-rated, 1–10)</span></label>
-                  <div class="slider-row"><input type="range" id="sleepQuality" min="1" max="10" step="1" value="7"><span class="slider-value" id="sleepQuality-val">7</span></div>
+                  <div class="slider-row"><input type="range" id="sleepQuality" min="1" max="10" step="1" value="7" aria-describedby="sleepQuality-limit sleepQuality-error"><span class="slider-value" id="sleepQuality-val">7</span></div><div class="field-range" id="sleepQuality-limit">Choose a rating from <strong>1 to 10</strong>.</div><div class="field-error" id="sleepQuality-error"></div>
                 </div>
                 <div class="field full-span">
                   <label for="stressLevel">Stress Level <span class="hint">(self-rated, 1–10)</span></label>
-                  <div class="slider-row"><input type="range" id="stressLevel" min="1" max="10" step="1" value="5"><span class="slider-value" id="stressLevel-val">5</span></div>
+                  <div class="slider-row"><input type="range" id="stressLevel" min="1" max="10" step="1" value="5" aria-describedby="stressLevel-limit stressLevel-error"><span class="slider-value" id="stressLevel-val">5</span></div><div class="field-range" id="stressLevel-limit">Choose a rating from <strong>1 to 10</strong>.</div><div class="field-error" id="stressLevel-error"></div>
                 </div>
                 <div class="field full-span">
                   <label for="physicalActivity">Physical Activity <span class="hint">(minutes / day)</span></label>
-                  <div class="slider-row"><input type="range" id="physicalActivity" min="0" max="120" step="5" value="45"><span class="slider-value" id="physicalActivity-val">45</span></div>
+                  <div class="slider-row"><input type="range" id="physicalActivity" min="0" max="120" step="5" value="45" aria-describedby="physicalActivity-limit physicalActivity-error"><span class="slider-value" id="physicalActivity-val">45</span></div><div class="field-range" id="physicalActivity-limit">Choose between <strong>0 and 120 minutes per day</strong>.</div><div class="field-error" id="physicalActivity-error"></div>
                 </div>
                 <div class="field">
                   <label for="bmiCategory">BMI Category</label>
@@ -855,7 +879,7 @@
                 </div>
                 <div class="field">
                   <label for="dailySteps">Daily Steps</label>
-                  <input type="number" id="dailySteps" value="7000" min="1000" max="20000" step="100">
+                  <input type="text" id="dailySteps" value="7000" inputmode="numeric" autocomplete="off" maxlength="5" aria-describedby="dailySteps-limit dailySteps-error"><div class="field-range" id="dailySteps-limit">Enter between <strong>1,000 and 20,000 steps per day</strong>.</div><div class="field-error" id="dailySteps-error"></div>
                 </div>
               </div>
             </div>
@@ -865,15 +889,15 @@
               <div class="field-grid">
                 <div class="field">
                   <label for="systolicBP">Systolic BP <span class="hint">(mmHg)</span></label>
-                  <input type="number" id="systolicBP" value="120" min="90" max="200">
+                  <input type="text" id="systolicBP" value="120" inputmode="numeric" autocomplete="off" maxlength="3" aria-describedby="systolicBP-limit systolicBP-error"><div class="field-range" id="systolicBP-limit">Enter a value between <strong>90 and 180 mmHg</strong>.</div><div class="field-error" id="systolicBP-error"></div>
                 </div>
                 <div class="field">
                   <label for="diastolicBP">Diastolic BP <span class="hint">(mmHg)</span></label>
-                  <input type="number" id="diastolicBP" value="80" min="55" max="130">
+                  <input type="text" id="diastolicBP" value="80" inputmode="numeric" autocomplete="off" maxlength="3" aria-describedby="diastolicBP-limit diastolicBP-error"><div class="field-range" id="diastolicBP-limit">Enter a value between <strong>60 and 120 mmHg</strong>.</div><div class="field-error" id="diastolicBP-error"></div>
                 </div>
                 <div class="field">
                   <label for="heartRate">Resting Heart Rate <span class="hint">(bpm)</span></label>
-                  <input type="number" id="heartRate" value="72" min="40" max="140">
+                  <input type="text" id="heartRate" value="72" inputmode="numeric" autocomplete="off" maxlength="3" aria-describedby="heartRate-limit heartRate-error"><div class="field-range" id="heartRate-limit">Enter a value between <strong>50 and 120 bpm</strong>.</div><div class="field-error" id="heartRate-error"></div>
                 </div>
               </div>
             </div>
@@ -1173,8 +1197,14 @@ function renderStepper(){
 function stepBack(){ if (currentStep > 1){ currentStep--; renderStepper(); } }
 
 async function stepNext(){
+  const fieldsByStep = {
+    1: ['age'],
+    2: ['sleepDuration','sleepQuality','stressLevel','physicalActivity','dailySteps'],
+    3: ['systolicBP','diastolicBP','heartRate']
+  };
+  if (!validateFields(fieldsByStep[currentStep])) return;
   if (currentStep < 3){ currentStep++; renderStepper(); return; }
-  await runAssessment();
+  runAssessment();
 }
 
 function resetToStep(n){ currentStep = n; renderStepper(); }
@@ -1210,9 +1240,9 @@ const VITAL_REFERENCE = {
   stressLevel:      { label:'Stress Level',      unit:'/10',   opt:[1,4],       hard:[1,10] },
   physicalActivity: { label:'Physical Activity', unit:'min',   opt:[30,90],     hard:[0,150] },
   dailySteps:       { label:'Daily Steps',       unit:'steps', opt:[7000,12000],hard:[500,20000] },
-  heartRate:        { label:'Resting Heart Rate',unit:'bpm',   opt:[60,80],     hard:[40,140] },
-  systolicBP:       { label:'Systolic BP',       unit:'mmHg',  opt:[90,120],    hard:[80,200] },
-  diastolicBP:      { label:'Diastolic BP',      unit:'mmHg',  opt:[60,80],     hard:[50,130] }
+  heartRate:        { label:'Resting Heart Rate',unit:'bpm',   opt:[60,80],     hard:[50,120] },
+  systolicBP:       { label:'Systolic BP',       unit:'mmHg',  opt:[90,120],    hard:[90,180] },
+  diastolicBP:      { label:'Diastolic BP',      unit:'mmHg',  opt:[60,80],     hard:[60,120] }
 };
 
 function scoreVital(key, value){
@@ -1537,14 +1567,142 @@ function renderResult(data){
 /* ==============================================================
    6) RUN ASSESSMENT
    ============================================================== */
-async function runAssessment(){
-  const fullName = document.getElementById('fullName').value.trim();
-  if(!fullName){
-    alert('Please enter your full name for the assessment report.');
-    document.getElementById('fullName').focus();
-    return;
-  }
+const INPUT_RULES = {
+  age: { min:18, max:80, step:1, label:'Age', unit:'years' },
+  sleepDuration: { min:4, max:10, step:0.1, label:'Sleep Duration', unit:'hours/night' },
+  sleepQuality: { min:1, max:10, step:1, label:'Quality of Sleep', unit:'/10' },
+  stressLevel: { min:1, max:10, step:1, label:'Stress Level', unit:'/10' },
+  physicalActivity: { min:0, max:120, step:5, label:'Physical Activity', unit:'minutes/day' },
+  dailySteps: { min:1000, max:20000, step:100, label:'Daily Steps', unit:'steps/day' },
+  systolicBP: { min:90, max:180, step:1, label:'Systolic BP', unit:'mmHg' },
+  diastolicBP: { min:60, max:120, step:1, label:'Diastolic BP', unit:'mmHg' },
+  heartRate: { min:50, max:120, step:1, label:'Resting Heart Rate', unit:'bpm' }
+};
 
+function getNumericCandidate(input, event){
+  const current = input.value;
+  const start = input.selectionStart ?? current.length;
+  const end = input.selectionEnd ?? current.length;
+  let inserted = '';
+  if (event.type === 'beforeinput') inserted = event.data ?? '';
+  if (event.type === 'paste') inserted = event.clipboardData?.getData('text') ?? '';
+  if (event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward') inserted = '';
+  if (event.inputType === 'insertFromPaste') inserted = event.data ?? '';
+  if (event.inputType === 'insertText' || event.inputType === 'insertCompositionText') inserted = event.data ?? '';
+  return current.slice(0, start) + inserted + current.slice(end);
+}
+
+function numericInputGuard(id){
+  const rule = INPUT_RULES[id];
+  const input = document.getElementById(id);
+  let lastValidValue = input.value;
+
+  const isAllowedRaw = value => {
+    if (value === '') return true;
+    if (!/^\d*$/.test(value)) return false;
+    if (value.length > String(Math.trunc(rule.max)).length) return false;
+    const number = Number(value);
+    return Number.isFinite(number) && number <= rule.max;
+  };
+
+  input.addEventListener('beforeinput', event => {
+    if (!event.inputType?.startsWith('insert')) return;
+    const candidate = getNumericCandidate(input, event);
+    if (!isAllowedRaw(candidate)) event.preventDefault();
+  });
+
+  input.addEventListener('paste', event => {
+    const pasted = event.clipboardData?.getData('text') ?? '';
+    const candidate = getNumericCandidate(input, {type:'paste', clipboardData:event.clipboardData});
+    if (!isAllowedRaw(candidate)) event.preventDefault();
+    else if (!/^\d*$/.test(pasted)) event.preventDefault();
+  });
+
+  input.addEventListener('input', () => {
+    const value = input.value;
+    if (!isAllowedRaw(value)) {
+      input.value = lastValidValue;
+      input.setSelectionRange(input.value.length, input.value.length);
+      return;
+    }
+    lastValidValue = value;
+  });
+
+  input.addEventListener('keydown', event => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'].includes(event.key)) return;
+    if (/^\d$/.test(event.key)) return;
+    event.preventDefault();
+  });
+}
+
+function setFieldValidation(id, valid, message=''){
+  const input = document.getElementById(id);
+  const field = input.closest('.field');
+  const error = document.getElementById(id + '-error');
+  field.classList.toggle('invalid', !valid);
+  field.classList.toggle('valid', valid);
+  input.setAttribute('aria-invalid', valid ? 'false' : 'true');
+  if (error) error.textContent = message;
+}
+
+function validateField(id){
+  const rule = INPUT_RULES[id];
+  const input = document.getElementById(id);
+  const value = Number(input.value);
+  if (!Number.isFinite(value)){
+    setFieldValidation(id, false, `${rule.label} is required.`);
+    return false;
+  }
+  if (value < rule.min || value > rule.max){
+    setFieldValidation(id, false, `${rule.label} must be between ${rule.min} and ${rule.max} ${rule.unit}.`);
+    return false;
+  }
+  const steps = (value - rule.min) / rule.step;
+  if (Math.abs(steps - Math.round(steps)) > 1e-8){
+    setFieldValidation(id, false, `${rule.label} must use increments of ${rule.step}.`);
+    return false;
+  }
+  setFieldValidation(id, true);
+  return true;
+}
+
+function validateFields(ids){
+  const results = ids.map(validateField);
+  const valid = results.every(Boolean);
+  const summary = document.getElementById('validationSummary');
+  if (valid){
+    summary.classList.remove('show');
+    return true;
+  }
+  summary.classList.add('show');
+  document.getElementById('validationSummaryText').textContent = 'Please correct the highlighted value(s). Each field shows its accepted range.';
+  const firstInvalid = ids.find(id => !validateField(id));
+  if (firstInvalid) document.getElementById(firstInvalid).focus();
+  return false;
+}
+
+Object.keys(INPUT_RULES).forEach(id=>{
+  const input = document.getElementById(id);
+  input.addEventListener('input', ()=>validateField(id));
+  input.addEventListener('blur', ()=>validateField(id));
+  if (input.matches('input[type="text"]')) numericInputGuard(id);
+});
+
+function validateFormBeforeSubmit(){
+  const ids = Object.keys(INPUT_RULES);
+  const valid = validateFields(ids);
+  const fullName = document.getElementById('fullName').value.trim();
+  if (!fullName){
+    document.getElementById('fullName').focus();
+    return false;
+  }
+  return valid;
+}
+
+async function runAssessment(){
+  if (!validateFormBeforeSubmit()) return;
+  const fullName = document.getElementById('fullName').value.trim();
   const f = {
     gender:            document.getElementById('gender').value,
     age:               Number(document.getElementById('age').value),
