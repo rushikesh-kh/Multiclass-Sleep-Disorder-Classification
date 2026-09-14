@@ -6,7 +6,7 @@
 [![Decision Tree](https://img.shields.io/badge/Decision%20Tree-Classifier-success.svg)](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html)
 [![Random Forest](https://img.shields.io/badge/Random%20Forest-Classifier-green.svg)](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Final%20Model-brightgreen.svg)](https://xgboost.readthedocs.io/)
-[![Probability Calibration](https://img.shields.io/badge/Probability%20Calibration-Evaluated-yellowgreen.svg)](https://scikit-learn.org/stable/modules/calibration.html)
+[![Calibrated XGBoost](https://img.shields.io/badge/Calibrated%20XGBoost-Sigmoid%20Calibration-yellowgreen.svg)](https://scikit-learn.org/stable/modules/calibration.html)
 [![Support Vector Machine](https://img.shields.io/badge/Support%20Vector%20Machine-SVM-red.svg)](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)
 [![SHAP](https://img.shields.io/badge/SHAP-Explainability-9cf.svg)](https://shap.readthedocs.io/)
 [![imbalanced--learn](https://img.shields.io/badge/imbalanced--learn-SMOTE-red.svg)](https://imbalanced-learn.org/)
@@ -28,8 +28,6 @@
 - [Data Preprocessing](#-data-preprocessing)
 - [Modeling Approach](#-modeling-approach)
 - [Results & Model Comparison](#-results--model-comparison)
-- [Final Test-Set Performance](#-final-test-set-performance)
-- [Probability Calibration Analysis](#-probability-calibration-analysis)
 - [Model Explainability (SHAP)](#-model-explainability-shap)
 - [Key Insights](#-key-insights)
 - [Conclusion](#-conclusion)
@@ -89,7 +87,7 @@ Given an individual's demographic, lifestyle, and physiological attributes, pred
 
 **Source:** Sleep Health and Lifestyle Dataset (Kaggle, synthetically generated)  
 **File:** `data/Sleep_Health_Lifestyle_Dataset.xlsx`  
-**Raw Shape:** 10,182 records → **10,000 records × 13 features** after removing duplicates and splitting Blood Pressure into two columns
+**Raw Shape:** 10,050 records → **10,000 records × 13 features** after de-duplication
 
 | Feature | Description |
 |---|---|
@@ -102,8 +100,8 @@ Given an individual's demographic, lifestyle, and physiological attributes, pred
 | **Sleep Disorder** *(Target)* | No Sleep Disorder / Insomnia / Sleep Apnea |
 
 **Data Quality Checks**
-- ⚠️ **182 duplicate records** identified and removed.
-- ⚠️ **12 of 13 features contain missing values** (up to ~5.4% per feature) — handled via mean/mode imputation inside a leakage-free pipeline, not by dropping rows.
+- ⚠️ **50 duplicate records** identified and removed.
+- ⚠️ **12 of 13 features contain missing values** (up to ~5.4% per feature) — handled via median/mode imputation inside a leakage-free pipeline, not by dropping rows.
 - ✅ `"None"` in the target column was explicitly preserved as a valid category (not read as null) using `keep_default_na=False` during ingestion, then relabeled to `"No Sleep Disorder"`.
 - ✅ Categorical inconsistencies (`FEMALE`, `female`, `Female `) standardized before encoding.
 
@@ -124,7 +122,7 @@ The notebook follows an 8-phase, leakage-aware pipeline:
 1. **Initial Data Preparation** — deduplication, text/category standardization, type correction, BP splitting, target relabeling.
 2. **Data Understanding** — shape, schema, missing-value profile, descriptive statistics, cardinality, target distribution.
 3. **Exploratory Data Analysis** — univariate, categorical, and relationship analysis; correlation and outlier checks.
-4. **Feature Engineering** — two domain-derived features from existing predictors (no target leakage).
+4. **Feature Engineering** — three domain-derived features from existing predictors (no target leakage).
 5. **Data Preprocessing** — `ColumnTransformer`-based pipeline (impute → scale/encode), fit only on training data.
 6. **Model Development & Selection** — 5 algorithms × 2 imbalance strategies, compared via stratified 5-fold CV.
 7. **Hyperparameter Tuning** — `RandomizedSearchCV` on the top candidates, optimizing Macro F1.
@@ -140,30 +138,31 @@ Built with **Matplotlib** and **Seaborn** — distribution plots, categorical br
 - **Sleep Apnea** patients show markedly higher **Systolic/Diastolic BP**, **Pulse Pressure**, and **Heart Rate** than the other classes.
 - **Insomnia** is strongly associated with lower **Sleep Duration** and **Quality of Sleep**, and higher **Stress Level**.
 - **BMI Category** shows the clearest categorical association with disorder status — **Obese** individuals skew heavily toward Sleep Apnea.
-- **Occupation** shows visible variation in disorder distribution across categories, offering moderate predictive value; **Gender** shows minimal separation.
+- **Occupation** (Doctor, Nurse, Lawyer) shows elevated disorder rates, likely as a stress/activity proxy; **Gender** shows minimal separation.
 - Outliers are limited to **under 1%** of observations across all numerical features — flagged, not removed.
 
 ---
 
 ## 🛠 Feature Engineering
 
-Two domain-relevant features were derived from existing predictors (target-independent):
+Three domain-relevant features were derived from existing predictors (target-independent):
 
 | Feature | Formula | Rationale |
 |---|---|---|
 | **Pulse Pressure** | `Systolic BP − Diastolic BP` | Additional cardiovascular signal beyond raw BP |
 | **Sleep Quality Index** | `((Sleep Duration / 24) + (Quality of Sleep / 10)) / 2` | Consolidated, standardized sleep-profile score |
+| **Stress-Sleep Interaction** | `Stress Level × Sleep Duration` | Captures the combined effect of stress and sleep duration |
 
-**Validation:** Both features separate classes meaningfully — Pulse Pressure is highest for Sleep Apnea (mean 65.6 vs. ~49–50 for the other two classes), and Sleep Quality Index is lowest for Insomnia (0.378 vs. 0.495–0.505 for the other two classes) — and were retained for modeling.
+**Validation:** All three features separate classes meaningfully — Pulse Pressure is highest for Sleep Apnea (mean 66.5 vs. ~49 for the other two classes), and Sleep Quality Index is lowest for Insomnia (0.368 vs. ~0.50) — and were retained for modeling.
 
 ---
 
 ## ⚙️ Data Preprocessing
 
 - **Split:** Stratified 80/20 train-test split → 8,000 train / 2,000 test.
-- **Numerical pipeline:** mean imputation → `StandardScaler`.
+- **Numerical pipeline:** median imputation → `StandardScaler`.
 - **Categorical pipeline:** mode imputation → `OneHotEncoder`.
-- Combined via `ColumnTransformer`, **fit only on training data** to prevent leakage — expands to a **29-feature** processed matrix.
+- Combined via `ColumnTransformer`, **fit only on training data** to prevent leakage — expands to a **30-feature** processed matrix.
 
 ---
 
@@ -189,38 +188,39 @@ Five classification algorithms were benchmarked under two imbalance-handling str
 
 ### Cross-Validation Performance
 
-Five algorithms were first benchmarked under class weighting and SMOTE; XGBoost and Random Forest led the baseline comparison (~79% CV Macro F1) and were carried forward for hyperparameter tuning.
-
-| Model | Strategy | Tuned CV Macro F1 |
+| Model | Strategy | Best CV Macro F1 |
 |---|---|---:|
-| **XGBoost** | **Class Weight** | **80.41%** |
-| XGBoost | SMOTE | 80.01% |
-| Random Forest | Class Weight | 78.33% |
+| **XGBoost** | **Class Weight** | **85.33%** |
+| XGBoost | SMOTE | 85.05% |
+| Random Forest | Tuned | 83.26% |
+| SVM | SMOTE | 81.35% |
+| Logistic Regression | SMOTE | 81.00% |
+| Decision Tree | Class Weight | 75.02% |
 
 **XGBoost with Class Weight** achieved the highest cross-validation Macro F1 and was selected as the final model.
 
 ---
 
-## 🧪 Final Test-Set Performance
+## 📈 Final Test-Set Performance
 
 The final tuned **XGBoost** model was evaluated on a **held-out test set** that remained untouched during model training, cross-validation, and hyperparameter tuning.
 
 | Metric | Score |
 |---|---:|
-| **Accuracy** | **90.95%** |
-| **Macro F1** | **83.41%** |
-| **Balanced Accuracy** | **81.38%** |
-| **Macro Precision** | **85.78%** |
-| **Macro Recall** | **81.38%** |
-| **ROC-AUC** | **96.77%** |
+| **Accuracy** | **93.50%** |
+| **Macro F1** | **88.50%** |
+| **Balanced Accuracy** | **87.43%** |
+| **Macro Precision** | **89.65%** |
+| **Macro Recall** | **87.43%** |
+| **ROC-AUC** | **98.29%** |
 
 ### Class-wise Performance
 
 | Class | Precision | Recall | F1 Score |
 |---|---:|---:|---:|
-| No Sleep Disorder | **93.16%** | **95.84%** | **94.48%** |
-| Sleep Apnea | **84.36%** | **79.47%** | **81.84%** |
-| Insomnia | **79.81%** | **68.83%** | **73.91%** |
+| No Sleep Disorder | **95.33%** | **96.67%** | **96.00%** |
+| Sleep Apnea | **89.78%** | **87.89%** | **88.83%** |
+| Insomnia | **83.84%** | **77.73%** | **80.67%** |
 
 The final model achieved strong overall performance, with particularly strong classification of **No Sleep Disorder** and **Sleep Apnea**. **Insomnia** remained the most challenging class, with a lower recall and F1 score.
 
@@ -230,9 +230,9 @@ The **Precision-Recall (PR) curve** was used to evaluate model performance acros
 
 | Class | PR-AUC |
 |---|---:|
-| No Sleep Disorder | **0.9876** |
-| Sleep Apnea | **0.9079** |
-| Insomnia | **0.8050** |
+| No Sleep Disorder | **0.9929** |
+| Sleep Apnea | **0.9585** |
+| Insomnia | **0.8951** |
 
 The PR-AUC results demonstrate strong precision-recall performance across all three classes, with **No Sleep Disorder** achieving the highest PR-AUC and **Insomnia** remaining the comparatively more challenging class.
 
@@ -240,7 +240,7 @@ The PR-AUC results demonstrate strong precision-recall performance across all th
 
 ---
 
-## ⚖️ Probability Calibration Analysis
+## Probability Calibration Analysis
 
 Probability calibration was evaluated to determine whether the final XGBoost model's multiclass probability estimates could be improved for **No Sleep Disorder, Insomnia, and Sleep Apnea**.
 
@@ -254,9 +254,9 @@ The calibration analysis included:
 
 | Model | Multiclass Log Loss | Multiclass Brier Score |
 |---|---:|---:|
-| Original XGBoost | **0.2386** | **0.1366** |
-| Platt Scaling (Sigmoid) | 0.2677 | 0.1417 |
-| Isotonic Regression | 0.2375 | 0.1362 |
+| Original XGBoost | **0.1700** | **0.0965** |
+| Platt Scaling (Sigmoid) | 0.1941 | 0.0988 |
+| Isotonic Regression | 0.1718 | 0.0977 |
 
 Lower values indicate better probability performance. The original XGBoost model achieved the lowest values for both metrics, while Isotonic Regression performed closer to the original model than Platt Scaling.
 
@@ -272,9 +272,11 @@ SHAP (`TreeExplainer`) was applied to the final XGBoost model on the transformed
 **Global Feature Importance (highest → lowest):**
 1. **Heart Rate** — single strongest predictor across all classes.
 2. **Sleep Duration** and **Sleep Quality Index** — next most influential.
-3. **Systolic BP**, followed by **Diastolic BP** and **Physical Activity Level** — strong supporting signal.
-4. **Age** and **BMI Category (Obese)** — moderate contribution.
-5. **Stress Level**, **Quality of Sleep**, and **Occupation** features — lower but class-specific influence.
+3. **Systolic BP** and **Age** — substantial contribution.
+4. **Physical Activity Level** and **Pulse Pressure** — meaningful supporting signal.
+5. **Quality of Sleep** and **Stress-Sleep Interaction** — class-specific influence.
+6. **BMI Category (Obese)** — noticeable, but secondary to physiological/sleep features.
+7. **Occupation** features — lowest overall influence.
 
 **Takeaway:** the model relies primarily on **physiological and sleep-related signals**, not demographic or occupational proxies — supporting its clinical plausibility and the use of SHAP for stakeholder trust, not just performance reporting.
 
@@ -287,7 +289,6 @@ SHAP (`TreeExplainer`) was applied to the final XGBoost model on the transformed
 3. Class weighting and SMOTE perform comparably here — class weighting was marginally better and simpler to deploy (no synthetic data generation at inference time).
 4. **XGBoost** outperformed all other candidates under every configuration tested, making it the deployment choice.
 5. **Insomnia** remains the hardest class to separate from a healthy sleep profile — the clearest target for future feature or data improvements.
-6. **Probability calibration provided no meaningful benefit** — Isotonic Regression matched the original model within a marginal difference, while Platt Scaling performed worse, so the original XGBoost probabilities were retained.
 
 ---
 
@@ -295,7 +296,7 @@ SHAP (`TreeExplainer`) was applied to the final XGBoost model on the transformed
 
 This project developed an **explainable multiclass machine learning solution** for classifying **No Sleep Disorder, Insomnia, and Sleep Apnea** using demographic, lifestyle, and physiological features.
 
-After comparing multiple classifiers, class-weighting and SMOTE strategies, and tuning the strongest candidates, **XGBoost** achieved the best final test performance with **90.95% accuracy, 83.41% Macro F1, 81.38% balanced accuracy, and 96.77% ROC-AUC**. SHAP analysis provided insight into the features influencing model predictions, while class-level evaluation showed that **Insomnia was more difficult to distinguish from No Sleep Disorder** than the other classes. The final model is prepared for deployment through a **Flask-based web application**.
+After comparing multiple classifiers, class-weighting and SMOTE strategies, and tuning the strongest candidates, **XGBoost** achieved the best final test performance with **93.50% accuracy, 88.50% Macro F1, 87.43% balanced accuracy, and 98.29% ROC-AUC**. SHAP analysis provided insight into the features influencing model predictions, while class-level evaluation showed that **Insomnia was more difficult to distinguish from No Sleep Disorder** than the other classes. The final model is prepared for deployment through a **Flask-based web application**.
 
 > **Note:** This project is intended for educational and predictive analytics purposes and is not a clinical diagnostic system.
 
@@ -334,7 +335,7 @@ Multiclass-Sleep-Disorder-Classification/
 ├── data/
 │   ├── Sleep_Health_Lifestyle_Dataset.xlsx
 │   ├── Multiclass Sleep Disorder Classification Report.pdf
-│   └── Multiclass Sleep Disorder Classification Report.docx
+│   └── Multiclass Seep Disorder Classification Report.docx
 │
 ├── notebook/
 │   └── Multiclass Sleep Disorder Classification.ipynb
